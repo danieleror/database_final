@@ -60,8 +60,25 @@ def main():
                                                                   + str(new_product_price) + ''');''')
                 print('New product successfully added!')
             elif response == 2:  # user wants to modify existing product
-                # TODO: implement modification of existing product
-                print('modify product here')
+                # gets sku of product to modify
+                sku_to_modify = inpt.get_integer_input('Please enter the SKU of the product to modify:')
+                while not 1 <= sku_to_modify <= len(products):
+                    print('ERROR: SKU not available!')
+                    sku_to_modify = inpt.get_integer_input('Please enter the SKU of the product to modify:')
+
+                # gets new value for product name (may not change)
+                new_name = products[sku_to_modify-1][1]
+                if inpt.get_yes_no_input('Would you like to change the product\'s name? (y/n)'):
+                    new_name = input('What would you like the new name to be?')
+                    while len(new_name) < 10 or '"' in new_name:
+                        new_name = input('Name must be at least 10 characters, and must not include quotes:')
+
+                # gets new value to product price (may not change)
+                new_price = products[sku_to_modify-1][2]
+                if inpt.get_yes_no_input('Would you like to change the product\'s price? (y/n)'):
+                    new_price = inpt.get_float_input('What would you like the new price to be?')
+
+                # TODO: update product with new name and price
             # no else needed, program automatically returns to main menu
         else:  # program exit
             running = False

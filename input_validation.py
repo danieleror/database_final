@@ -79,3 +79,14 @@ def get_date_input(prompt) -> str:
                 valid_input = False
 
     return response  # returns validated date
+
+
+# gets yes or no input from user
+def get_yes_no_input(prompt) -> bool:
+    response = input(prompt)
+    while response != 'y' and response != 'n':
+        print("ERROR: Please enter y or n!")
+        response = input(prompt)
+    if response == 'y':
+        return True
+    return False
