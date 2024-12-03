@@ -8,12 +8,12 @@ that take input from the command line.
 """
 
 
-# gets numerical input from user
-def get_numerical_input(prompt) -> int:
+# gets integer input from user
+def get_integer_input(prompt) -> int:
     response = input(prompt)  # receives initial input
     casted_response = 0  # initializes variable to be returned
     valid_input = False
-    while not valid_input:  # loops until a valid numerical input has been given
+    while not valid_input:  # loops until a valid int input has been given
         try:
             if len(response) > 0:
                 casted_response = int(response)  # attempts to cast to int
@@ -23,7 +23,28 @@ def get_numerical_input(prompt) -> int:
                 response = input(prompt)
                 valid_input = False
         except ValueError:  # if casting to int failed, user is informed to try again
-            print('ERROR: Input must be numerical!')
+            print('ERROR: Input must be an integer!')
+            response = input(prompt)
+
+    return casted_response  # returns value to user
+
+
+# gets float input from user
+def get_float_input(prompt) -> float:
+    response = input(prompt)  # receives initial input
+    casted_response = 0  # initializes variable to be returned
+    valid_input = False
+    while not valid_input:  # loops until a valid float input has been given
+        try:
+            if len(response) > 0:
+                casted_response = float(response)  # attempts to cast to float
+                valid_input = True
+            else:  # if response is empty, inform user and try again
+                print('ERROR: Please enter a value!')
+                response = input(prompt)
+                valid_input = False
+        except ValueError:  # if casting to float failed, user is informed to try again
+            print('ERROR: Input must be a float!')
             response = input(prompt)
 
     return casted_response  # returns value to user
