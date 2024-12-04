@@ -1,5 +1,6 @@
 import input_validation as inpt
 import pandas as pd
+import numpy as np
 import sqlite3
 
 
@@ -36,7 +37,8 @@ def main():
                   '1) Add new customer\n'
                   '2) Edit existing customer info\n'
                   '3) Delete Customer\n'
-                  '4) Exit to main menu')
+                  '4) Show customer order history\n'
+                  '5) Exit to main menu')
             response = inpt.get_integer_input('Please enter a value 1-4:')
             if not (1 <= response <= 4):
                 print('ERROR: Response out of range!')
@@ -110,10 +112,8 @@ def main():
                         WHERE customer_id=''' + str(id_to_modify) + ''';''')
 
             elif response == 3:
-                # TODO: implement after sale deletion is implemented
-                # only should work if no sales exist with this customer associated with it
                 # gets an id that exists from the user
-                id_to_delete = inpt.get_integer_input('Enter the id of the customer you wish to delete:')
+                id_to_delete = inpt.get_integer_input('Enter the ID of the customer you wish to delete:')
                 valid_id = False
                 while not valid_id:
                     for customer in customers:
@@ -136,8 +136,47 @@ def main():
                 else:  # valid sku and no associated sales exist, so product can be deleted
                     cursor.execute('''DELETE FROM customers WHERE customer_id=''' + str(id_to_delete) + ''';''')
 
+            elif response == 4:  # user wants to view all sales for a specific customer
+                # gets an id that exists from the user
+                customer_id = inpt.get_integer_input('Enter the ID of the customer who\'s sales you\'d like to view:')
+                valid_id = False
+                while not valid_id:
+                    for customer in customers:
+                        if customer_id == customer[0]:
+                            valid_id = True
+
+                    if not valid_id:
+                        print('ERROR: Customer-ID not found, please try again...')
+                        id_to_delete = inpt.get_integer_input('Enter the ID of the customer who\'s sales you\'d like '
+                                                              'to view:')
+                # gets all sales that match this customer
+                sales = pd.read_sql('SELECT * FROM (sale_info CROSS JOIN sale_orders USING(sale_id)) '
+                                    'CROSS JOIN products USING(product_sku) '
+                                    'WHERE customer_id=' + str(customer_id) + ';', connection).values
+                if len(sales) == 0:
+                    print('Selected customer has no sales in system.')
+                else:  # will iterate through each sale
+                    sale_ids_used = []
+                    for sale in sales:
+                        if not sale[0] in sale_ids_used:
+                            # adds sale id to used ids and prints header for each individual sale
+                            sale_ids_used.append(sale[0])
+                            print(f'-------------------------------------------------\n'
+                                  f'Sale ID: {sale[0]}\n'
+                                  f'Total Amount: ${sale[1]}\n'
+                                  f'Date Ordered: {sale[2]}\n'
+                                  f'Status: {sale[3]}\n'
+                                  f'ORDER CONTENTS:')
+
+                        print(f'    {sale[7]:8<} - {sale[6]:4<}x {sale[8]:<20} @ ${sale[9]}')
+
+                    print('-------------------------------------------------\n'
+                          'Total sales found: ' + str(len(sale_ids_used)))
+
             # no else needed, program automatically returns to main menu
-        elif response == 3:  # products menu
+
+        # products menu
+        elif response == 3:
             print('Products available:')
 
             # displays products to user
@@ -223,7 +262,9 @@ def main():
                     cursor.execute('''DELETE FROM products WHERE product_sku=''' + str(sku_to_delete) + ''';''')
 
             # no else needed, program automatically returns to main menu
-        else:  # program exit
+
+        # program exit
+        else:
             running = False
 
     print('Program terminating...')
