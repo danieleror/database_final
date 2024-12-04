@@ -107,6 +107,11 @@ def main():
                         email="''' + new_email + '''", 
                         address="''' + new_address + '''"
                         WHERE customer_id=''' + str(id_to_modify) + ''';''')
+
+            elif response == 3:
+                # TODO: implement after sale deletion is implemented
+                # only should work if no sales exist with this customer associated with it
+                print('delete customer screen')
             # no else needed, program automatically returns to main menu
         elif response == 3:  # products menu
             print('Products available:')
@@ -121,9 +126,10 @@ def main():
             print('Options:\n'
                   '1) Add new product\n'
                   '2) Edit existing product\n'
-                  '3) Exit to main menu')
+                  '3) Delete product\n'
+                  '4) Exit to main menu')
             response = inpt.get_integer_input('Please enter 1, 2, or 3:')
-            if not (1 <= response <= 3):
+            if not (1 <= response <= 4):
                 print('ERROR: Response out of range!')
                 response = inpt.get_integer_input('Please enter 1, 2, or 3:')
             if response == 1:  # user wants to add new product
@@ -166,6 +172,34 @@ def main():
                 # updates record with new information from user
                 cursor.execute('''UPDATE products SET name="''' + new_name + '''", 
                         price=''' + str(new_price) + ''' WHERE product_sku=''' + str(sku_to_modify) + ''';''')
+
+            elif response == 3:  # delete product
+                # TODO: implement after sale deletion is implemented
+                # only should work if no sales exist with this product associated with it
+                # gets a sku that exists from the user
+                sku_to_delete = inpt.get_integer_input('Enter the SKU of the product you wish to delete:')
+                valid_sku = False
+                while not valid_sku:
+                    for product in products:
+                        if sku_to_delete == product[0]:
+                            valid_sku = True
+
+                    if not valid_sku:
+                        print('ERROR: SKU not found, please try again...')
+                        sku_to_delete = inpt.get_integer_input('Enter the SKU of the product you wish to delete:')
+
+                sale_exists = False
+                sale_info = pd.read_sql('SELECT * FROM sale_info;', connection).values
+                for sale in sale_info:
+                    if sale[4] == sku_to_delete:
+                        sale_exists = True
+
+                if sale_exists:
+                    print('ERROR: Unable to complete operation because there is at least 1 sale associated with this\n'
+                          'product. Associated sales must be deleted prior to deleting this product.')
+                else:  # valid sku and no associated sales exist, so product can be deleted
+                    cursor.execute('''DELETE FROM products WHERE product_sku=''' + str(sku_to_delete) + ''';''')
+
             # no else needed, program automatically returns to main menu
         else:  # program exit
             running = False
