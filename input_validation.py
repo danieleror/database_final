@@ -81,6 +81,59 @@ def get_date_input(prompt) -> str:
     return response  # returns validated date
 
 
+# gets phone number in correct format from user
+def get_phone_number_input(prompt) -> str:
+    response = input(prompt)
+    valid_input = False
+    while not valid_input:
+        if len(response) != 12 or response[3] != '-' or response[7] != '-':
+            print('ERROR: Phone number does not follow specified format!')
+            response = input(prompt)
+            valid_input = False
+        else:
+            try:
+                values = response.split('-')
+                int(values[0])
+                int(values[1])
+                int(values[2])
+                valid_input = True
+            except ValueError:
+                print('ERROR: Non-numerical values entered. Please try again...')
+                response = input(prompt)
+                valid_input = False
+
+    return response  # returns validated date
+
+
+# gets email address in correct format from user
+def get_email_input(prompt):
+    response = input(prompt)
+    valid_input = False
+    while not valid_input:
+        if len(response) < 6:
+            print('ERROR: email must be at least 6 characters long!')
+            response = input(prompt)
+            valid_input = False
+        elif response.count('@') != 1 or response.count('.') != 1 or response.index('@') > response.index('.'):
+            # informs user if they did not include the right number of @ or ., or if in the wrong order
+            print('ERROR: Invalid format!')
+            response = input(prompt)
+            valid_input = False
+        else:
+            # splits email into different sections
+            first_split = response.split('@')
+            second_split = first_split[1].split('.')
+            # checks that each part has text
+            if len(first_split[0]) == 0 or len(second_split[0]) == 0 or len(second_split[1]) == 0:
+                print('ERROR: Invalid email provided!')
+                response = input(prompt)
+                valid_input = False
+            else:
+                valid_input = True  # valid email, loop can end
+
+    return response  # returns valid email to the user
+
+
 # gets yes or no input from user
 def get_yes_no_input(prompt) -> bool:
     response = input(prompt)
