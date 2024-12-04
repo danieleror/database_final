@@ -20,10 +20,56 @@ def main():
             print('ERROR: Response out of range!')
             response = inpt.get_integer_input('Please enter a value 1-4:')
 
-        if response == 1:  # sales menu
-            # TODO: implement sales menu
-            print('sales menu')
-        elif response == 2:  # customers menu
+        # sales menu
+        if response == 1:
+            print('1) View all sales\n'
+                  '2) Modify sale\n'
+                  '3) Delete sale\n'
+                  '4) Exit to main menu')
+
+            # gets choice from user
+            response = inpt.get_integer_input('Please enter a value 1-4:')
+            while not (1 <= response <= 4):
+                print('ERROR: Input out of range!')
+                response = inpt.get_integer_input('Please enter a value 1-4:')
+
+            if response == 1:  # view all sales
+                # retrieves all database info and stores it into variable
+                sales = pd.read_sql('SELECT * FROM (sale_info CROSS JOIN sale_orders USING(sale_id)) '
+                                    'CROSS JOIN products USING(product_sku) '
+                                    'CROSS JOIN customers USING(customer_id);', connection).values
+
+                sale_ids_printed = []
+                for sale in sales:
+                    if not sale[0] in sale_ids_printed:
+                        # prints header for sale
+                        sale_ids_printed.append(sale[0])
+                        print(f'-------------------------------------------------\n'
+                              f'Sale ID: {sale[0]}\n'
+                              f'Total Amount: ${sale[1]}\n'
+                              f'Date ordered: {sale[2]}\n'
+                              f'Status: {sale[3]}\n'
+                              f'CUSTOMER INFO:\n'
+                              f'    ID: {sale[4]}\n'
+                              f'    Name: {sale[10]}\n'
+                              f'    Phone: {sale[11]}\n'
+                              f'    Email: {sale[12]}\n'
+                              f'    Address: {sale[13]}\n'
+                              f'ORDER CONTENTS:')
+
+                    # prints each product order in sale
+                    print(f'    {sale[7]:8<} - {sale[6]:4<}x {sale[8]:<20} @ ${sale[9]}')
+
+                print('-------------------------------------------------')
+            elif response == 2:  # modify sale
+
+                print()
+            elif response == 3:  # delete sale
+                print()
+
+            # no else, program automatically returns to main menu
+        # customer menu
+        elif response == 2:
             print('Customers currently in system:')
 
             # displays customers to user
@@ -40,11 +86,11 @@ def main():
                   '4) Show customer order history\n'
                   '5) Exit to main menu')
             response = inpt.get_integer_input('Please enter a value 1-4:')
-            if not (1 <= response <= 4):
+            if not (1 <= response <= 5):
                 print('ERROR: Response out of range!')
                 response = inpt.get_integer_input('Please enter a value 1-4:')
             if response == 1:  # user wants to add new customer
-                new_customer_id = len(customers) + 1  # new id is 1 more than previous
+                new_customer_id = customers[len(customers) - 1][0] + 1  # new id is 1 more than current highest
 
                 # gets  customer name from user
                 new_customer_name = input('Please enter the new customer\'s name:')
@@ -191,12 +237,12 @@ def main():
                   '2) Edit existing product\n'
                   '3) Delete product\n'
                   '4) Exit to main menu')
-            response = inpt.get_integer_input('Please enter 1, 2, or 3:')
+            response = inpt.get_integer_input('Please enter a value 1-4:')
             if not (1 <= response <= 4):
                 print('ERROR: Response out of range!')
-                response = inpt.get_integer_input('Please enter 1, 2, or 3:')
+                response = inpt.get_integer_input('Please enter a value 1-4:')
             if response == 1:  # user wants to add new product
-                new_product_sku = len(products) + 1  # new sku is 1 more than previous
+                new_product_sku = products[len(products) - 1][0] + 1  # new sku is 1 more than current highest
 
                 # gets new product name from user
                 new_product_name = input('Please enter the new product\'s name:')
