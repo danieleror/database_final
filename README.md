@@ -1,8 +1,6 @@
 # Final Project - Camera Shop Data System
 ### by Daniel Eror
 
-
----
 ## Setup
 Be sure that `camera_shop.py`, `input_validation.py`, and `dans_camera_shop.db` are all in the same directory. Then, 
 simply run `camera_shop.py` either in an IDE or through the terminal. This program's user interface is entirely through
@@ -12,8 +10,6 @@ ___NOTE:___ if you want to save changes to the database, be sure you exit
 the program through the menu options. If you terminate the program by typing CTRL+C or clicking STOP in the IDE, any 
 changes you make will not be saved in the database file. 
 
-
----
 ## Overview
 To simplify input validation, I created a python file to store some functions that I knew I would use repeatedly in my 
 program. This includes functions that get dates, phone numbers, integers, and floats from the user. 
