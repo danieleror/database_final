@@ -28,3 +28,6 @@ data that would cause errors with related data. Specifically, if a user tries to
 associated with a sale, the operation is stopped and the program informs the user that they need to delete the 
 associated first. When a user deletes a sale, that sale is deleted from the sale_info table, and also all orders with 
 that ID are deleted from the sale_orders table. 
+
+### Link For Video Walkthrough
+https://uvmoffice-my.sharepoint.com/:v:/g/personal/deror_uvm_edu/Eed6334kl0lHhK4vhr6aprABIcutiZR8hV0gv_uYNaroVg?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=Ql6IMa
