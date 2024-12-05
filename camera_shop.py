@@ -60,7 +60,7 @@ def main():
                               f'ORDER CONTENTS:')
 
                     # prints each product order in sale
-                    print(f'    {sale[7]:8<} - {sale[6]:4<}x {sale[8]:<20} @ ${sale[9]}')
+                    print(f'    {sale[7]:8} - {sale[6]:>2}x {sale[8]:<25} @ ${sale[9]}')
 
                 print('-------------------------------------------------')
 
@@ -76,6 +76,7 @@ def main():
                     for sale_id in additional_sale_ids:
                         print(sale_id)
                     print('-------------------------------------------------')
+
             # create new sale - creates new sale_info and user can then add products in the modify sale menu
             if response == 2:
                 sale_date = inpt.get_date_input('Please enter the order date:')  # gets date for new sale
@@ -96,7 +97,8 @@ def main():
                 new_sale_id = str(int(sales[len(sales) - 1][0]) + 1)
 
                 cursor.execute('''INSERT INTO sale_info VALUES(''' + new_sale_id + ''', 0.0, 
-                        ''' + sale_date + ''', "payment_pending", ''' + str(customer_id) + ''');''')
+                        "''' + sale_date + '''", "payment_pending", ''' + str(customer_id) + ''');''')
+                print('Sale created! To add products, visit the "Modify sale" menu.')
 
             # modify sale
             elif response == 3:
@@ -118,8 +120,43 @@ def main():
                                         'CROSS JOIN customers USING (customer_id)'
                                         'WHERE sale_id=' + str(sale_to_modify) + ';', connection).values
                 if len(sale_data) == 0:  # no associated orders. user must add products before making other changes
-                    # TODO: let user add products to order
-                    print('add products here')
+                    print('Sale contains no products, please add products below...')
+                    total = 0.0
+                    still_adding = True
+                    while still_adding:
+                        products_available = pd.read_sql('SELECT * FROM products;', connection).values
+
+                        sku_to_add = inpt.get_integer_input('Please enter the product SKU you\'d like to add:')
+                        valid_sku = False
+                        unit_price = 0.0
+                        while not valid_sku:  # loops until valid sku has been selected
+                            for product in products_available:
+                                if product[0] == sku_to_add:
+                                    unit_price = float(product[2])
+                                    valid_sku = True
+
+                            if not valid_sku:
+                                print('ERROR: SKU not found!')
+                                sku_to_add = inpt.get_integer_input(
+                                    'Please enter the product SKU you\'d like to add:')
+
+                        quantity = inpt.get_integer_input('Please provide quantity:')
+                        while not (1 <= quantity <= 10):
+                            print('ERROR: Quantity must be between 1-10:')
+                            quantity = inpt.get_integer_input('Please provide quantity:')
+
+                        total = total + (quantity * unit_price)
+                        # adds new order assigned to sale, and updates sale total
+                        cursor.execute('''INSERT INTO sale_orders VALUES(''' + str(sale_to_modify) +
+                                       ''', ''' + str(sku_to_add) + ''', ''' + str(quantity) + ''', '''
+                                       + str(quantity * unit_price) + ''');''')
+
+                        still_adding = inpt.get_yes_no_input('Would you like to add more products? (y/n)')
+
+                    # updates table with new total after user is done adding products
+                    cursor.execute('''UPDATE sale_info SET total_amount=''' + str(total) + '''
+                            WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+
                 elif sale_data[0][3] == 'complete':
                     # cannot modify sale because it is already complete
                     print('Unable modify sale as it has already been completed!\n'
@@ -128,6 +165,11 @@ def main():
                 else:  # able to modify sale because it has not been shipped out yet
                     still_editing = True
                     while still_editing:  # loops until user is done modifying sale
+                        # renews values of sale_data in the event it changed within loop
+                        sale_data = pd.read_sql('SELECT * FROM ((sale_info CROSS JOIN sale_orders USING(sale_id))'
+                                                'CROSS JOIN products USING (product_sku)) '
+                                                'CROSS JOIN customers USING (customer_id)'
+                                                'WHERE sale_id=' + str(sale_to_modify) + ';', connection).values
                         # shows user current info
                         print(f'Current sale info:\n'
                               f'Total Amount: ${sale_data[0][1]}\n'
@@ -137,13 +179,13 @@ def main():
                               f'Customer Name: {sale_data[0][10]}\n'
                               f'ORDER CONTENTS:')
                         for order in sale_data:
-                            print(f'    {order[7]:8<} - {order[6]:4<}x {order[8]:<20} @ ${order[9]}')
+                            print(f'    {order[7]:8} - {order[6]:>2}x {order[8]:<25} @ ${order[9]}')
 
                         print('Options:\n'
                               '1) Change status\n'
                               '2) Assign different customer\n'
                               '3) Remove products\n'
-                              '4) Add products'
+                              '4) Add products\n'
                               '5) Done modifying')
                         response = inpt.get_integer_input('Please enter value 1-5:')
                         while not (1 <= response <= 5):
@@ -174,6 +216,7 @@ def main():
                             # changes status
                             cursor.execute('''UPDATE sale_info SET status="''' + new_status + '''"
                                     WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+                            print('Status successfully changed!')
 
                         # reassign customer
                         elif response == 2:
@@ -193,6 +236,7 @@ def main():
                             # reassign customer
                             cursor.execute('''UPDATE sale_info SET customer_id=''' + str(new_customer_id) + '''
                                     WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+                            print('Sale successfully reassigned!')
 
                         # Remove products
                         elif response == 3:
@@ -212,9 +256,10 @@ def main():
 
                             # removes product from orders and updates the new sale total
                             cursor.execute('''DELETE FROM sale_orders WHERE product_sku=''' + str(sku_to_remove) +
-                                           '''AND sale_id=''' + str(sale_to_modify) + ''';''')
+                                           ''' AND sale_id=''' + str(sale_to_modify) + ''';''')
                             cursor.execute('''UPDATE sale_info SET total_amount=''' + new_total + '''
                                     WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+                            print('Product(s) successfully removed from sale!')
 
                         # Add products
                         elif response == 4:
@@ -224,7 +269,7 @@ def main():
                             valid_sku = False
                             unit_price = 0.0
                             while not valid_sku:  # loops until valid sku has been selected
-                                for product in products:
+                                for product in products_available:
                                     if product[0] == sku_to_add:
                                         unit_price = float(product[2])
                                         valid_sku = True
@@ -245,7 +290,8 @@ def main():
                                            + str(quantity * unit_price) + ''');''')
                             new_total = str(float(sale_data[0][1]) + (quantity * unit_price))
                             cursor.execute('''UPDATE sale_info SET total_amount=''' + new_total + '''
-                                                                WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+                                    WHERE sale_id=''' + str(sale_to_modify) + ''';''')
+                            print('Product(s) successfully added to sale!')
 
                         # done editing
                         else:
@@ -255,7 +301,7 @@ def main():
             elif response == 4:
                 sales = pd.read_sql('SELECT * FROM sale_info;', connection).values
 
-                sale_to_delete = inpt.get_integer_input('Please enter sale ID you wish to delete')
+                sale_to_delete = inpt.get_integer_input('Please enter sale ID you wish to delete: ')
                 valid_id = False
                 while not valid_id:
                     for sale in sales:
@@ -295,7 +341,9 @@ def main():
             if not (1 <= response <= 5):
                 print('ERROR: Response out of range!')
                 response = inpt.get_integer_input('Please enter a value 1-4:')
-            if response == 1:  # user wants to add new customer
+
+            # user wants to add new customer
+            if response == 1:
                 new_customer_id = customers[len(customers) - 1][0] + 1  # new id is 1 more than current highest
 
                 # gets  customer name from user
@@ -323,7 +371,9 @@ def main():
                                + new_customer_email + '''", "'''
                                + new_customer_address + '''");''')
                 print('New customer successfully saved!')
-            elif response == 2:  # user wants to modify existing customer's info
+
+            # user wants to modify existing customer's info
+            elif response == 2:
                 # gets id of customer info to modify
                 id_to_modify = inpt.get_integer_input('Please enter the ID of the customer who\'s info you\'d like'
                                                       'to modify:')
@@ -363,6 +413,9 @@ def main():
                         address="''' + new_address + '''"
                         WHERE customer_id=''' + str(id_to_modify) + ''';''')
 
+                print('Changes made!')
+
+            # user wants to delete a customer
             elif response == 3:
                 # gets an id that exists from the user
                 id_to_delete = inpt.get_integer_input('Enter the ID of the customer you wish to delete:')
@@ -387,8 +440,10 @@ def main():
                           'customer. Associated sales must be deleted prior to deleting this customer.')
                 else:  # valid sku and no associated sales exist, so product can be deleted
                     cursor.execute('''DELETE FROM customers WHERE customer_id=''' + str(id_to_delete) + ''';''')
+                    print('Customer successfully deleted!')
 
-            elif response == 4:  # user wants to view all sales for a specific customer
+            # user wants to view all sales for a specific customer
+            elif response == 4:
                 # gets an id that exists from the user
                 customer_id = inpt.get_integer_input('Enter the ID of the customer who\'s sales you\'d like to view:')
                 valid_id = False
@@ -420,7 +475,7 @@ def main():
                                   f'Status: {sale[3]}\n'
                                   f'ORDER CONTENTS:')
 
-                        print(f'    {sale[7]:8<} - {sale[6]:4<}x {sale[8]:<20} @ ${sale[9]}')
+                        print(f'    {sale[7]:8} - {sale[6]:>2}x {sale[8]:<25} @ ${sale[9]}')
 
                     print('-------------------------------------------------\n'
                           'Total sales found: ' + str(len(sale_ids_used)))
@@ -447,7 +502,9 @@ def main():
             if not (1 <= response <= 4):
                 print('ERROR: Response out of range!')
                 response = inpt.get_integer_input('Please enter a value 1-4:')
-            if response == 1:  # user wants to add new product
+
+            # user wants to add new product
+            if response == 1:
                 new_product_sku = products[len(products) - 1][0] + 1  # new sku is 1 more than current highest
 
                 # gets new product name from user
@@ -465,7 +522,9 @@ def main():
                                                                   + new_product_name + '''", '''
                                                                   + str(new_product_price) + ''');''')
                 print('New product successfully added!')
-            elif response == 2:  # user wants to modify existing product
+
+            # user wants to modify existing product
+            elif response == 2:
                 # gets sku of product to modify
                 sku_to_modify = inpt.get_integer_input('Please enter the SKU of the product to modify:')
                 while not 1 <= sku_to_modify <= len(products):
@@ -487,8 +546,10 @@ def main():
                 # updates record with new information from user
                 cursor.execute('''UPDATE products SET name="''' + new_name + '''", 
                         price=''' + str(new_price) + ''' WHERE product_sku=''' + str(sku_to_modify) + ''';''')
+                print('Product successfully updated!')
 
-            elif response == 3:  # delete product
+            # delete product
+            elif response == 3:
                 # gets a sku that exists from the user
                 sku_to_delete = inpt.get_integer_input('Enter the SKU of the product you wish to delete:')
                 valid_sku = False
@@ -512,6 +573,7 @@ def main():
                           'product. Associated sales must be deleted prior to deleting this product.')
                 else:  # valid sku and no associated sales exist, so product can be deleted
                     cursor.execute('''DELETE FROM products WHERE product_sku=''' + str(sku_to_delete) + ''';''')
+                    print('Product deleted successfully!')
 
             # no else needed, program automatically returns to main menu
 
