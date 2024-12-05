@@ -320,6 +320,7 @@ def main():
                     print('Cancelled!')
 
             # no else, program automatically returns to main menu
+
         # customer menu
         elif response == 2:
             print('Customers currently in system:')
@@ -397,7 +398,7 @@ def main():
                 # gets new value for customer's email (may not change)
                 new_email = customers[id_to_modify - 1][3]
                 if inpt.get_yes_no_input('Would you like to change the customer\'s email? (y/n)'):
-                    new_price = inpt.get_float_input('Please enter new email:')
+                    new_email = inpt.get_email_input('Please enter new email:')
 
                 # gets new value for customer's address (may not change)
                 new_address = customers[id_to_modify - 1][4]

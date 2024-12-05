@@ -12,7 +12,7 @@ changes you make will not be saved in the database file.
 
 ## Overview
 To simplify input validation, I created a python file to store some functions that I knew I would use repeatedly in my 
-program. This includes functions that get dates, phone numbers, integers, and floats from the user. 
+program. This includes functions that get dates, phone numbers, integers, and more from the user. 
 
 For the main functionality of the program, there are several nested loops, and tons of nested if statements. This all 
 combines to create the user interface, which contains several menus, and different options within those menus. I use 
